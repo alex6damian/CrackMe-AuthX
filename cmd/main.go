@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/alex6damian/CrackMe-AuthX/api"
 	"github.com/alex6damian/CrackMe-AuthX/internal/db"
 	"github.com/gofiber/fiber/v2"
 )
@@ -22,6 +23,12 @@ func main() {
 			"version":  "1.0.0",
 		})
 	})
+
+	// API grup
+	v1 := app.Group("/api")
+
+	v1.Post("/register", api.Register)
+	v1.Post("/login", api.Login)
 
 	log.Println("Server started on: 8080")
 	log.Fatal(app.Listen(":8080"))
