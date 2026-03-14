@@ -29,6 +29,9 @@ func main() {
 
 	v1.Post("/register", api.Register)
 	v1.Post("/login", api.Login)
+	v1.Post("/logout", api.AuthMiddleware, api.Logout)
+	v1.Post("/forgot-password", api.ForgotPassword)
+	v1.Post("/reset-password", api.ResetPassword)
 
 	log.Println("Server started on: 8080")
 	log.Fatal(app.Listen(":8080"))
