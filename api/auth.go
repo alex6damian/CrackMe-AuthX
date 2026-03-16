@@ -12,8 +12,8 @@ import (
 )
 
 type AuthRequest struct {
-	Email    string `json:"email" validate:"required, min:3, max 30"`
-	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"email,required,min=3,max=30"`
+	Password string `json:"password" validate:"required,strong_password"`
 }
 
 type AuthResponse struct {
@@ -28,7 +28,7 @@ type LogoutRequest struct {
 }
 
 type ForgotPasswordRequest struct {
-	Email string `json:"email" validate:"required, min:3, max 30"`
+	Email string `json:"email" validate:"email,required,min=3,max=30"`
 }
 
 type ForgotPasswordResponse struct {
@@ -37,7 +37,7 @@ type ForgotPasswordResponse struct {
 
 type ResetPasswordRequest struct {
 	Token    string `json:"token" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Password string `json:"password" validate:"required,strong_password"`
 }
 
 // Register handler - POST /api/register
@@ -46,21 +46,34 @@ func Register(c *fiber.Ctx) error {
 
 	// Parse and validate request
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error parsing"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Error parsing"})
+	}
+
+	if err := utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
 	}
 
 	// Check if exists
 	var existingUser models.User
 	if err := db.DB.Where("email=?", req.Email).First(&existingUser).Error; err == nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User already existing"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Wrong credentials"})
 	}
 
-	// TODO: hash passs
+	// Hash password
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Hashing failed",
+		})
+	}
 
 	// Create user
 	user := models.User{
 		Email:         req.Email,
-		Password_hash: req.Password,
+		Password_hash: hashedPassword,
 	}
 
 	// Insert user to DB
@@ -82,12 +95,12 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	c.Cookie(&fiber.Cookie{
-		Name:  "token",
-		Value: token,
-		Path:  "/",
-		// HTTPOnly: true,
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		HTTPOnly: true,
 		SameSite: "Lax",
-		// Secure: true,
+		// Secure:   true,
 	})
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -105,7 +118,11 @@ func Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error parsing"})
 	}
 
-	// raw sql for injection
+	if err := utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
 	// Find user by email
 	var user models.User
@@ -117,7 +134,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	// Check password
-	if user.Password_hash != req.Password {
+	if !utils.CheckPassword(user.Password_hash, req.Password) {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Wrong password"})
 	}
 
@@ -134,12 +151,12 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	c.Cookie(&fiber.Cookie{
-		Name:  "token",
-		Value: token,
-		Path:  "/",
-		// HTTPOnly: true,
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		HTTPOnly: true,
 		SameSite: "Lax",
-		// Secure: true,
+		// Secure:   true,
 	})
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -202,6 +219,12 @@ func ResetPassword(c *fiber.Ctx) error {
 	// Parse and validate request
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error parsing"})
+	}
+
+	if err := utils.ValidateStruct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
 	}
 
 	var user models.User
