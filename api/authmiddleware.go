@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log"
 	"strings"
 
 	"github.com/alex6damian/CrackMe-AuthX/internal/utils"
@@ -10,44 +9,39 @@ import (
 
 // AuthMiddleware validates JWT token and sets user context
 func AuthMiddleware(c *fiber.Ctx) error {
-	log.Printf("🔍 AuthMiddleware START - Method: %s, Path: %s\n", c.Method(), c.Path())
-
 	authHeader := c.Get("Authorization")
-	if authHeader == "" {
-		log.Println("   ❌ Missing auth header")
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"success": false,
-			"error":   "Missing Authorization header",
-		})
+
+	var token string
+
+	if authHeader != "" {
+		parts := strings.Split(authHeader, " ")
+		if len(parts) == 2 && parts[0] == "Bearer" {
+			token = parts[1]
+		}
 	}
 
-	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		log.Printf("   ❌ Invalid format")
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"success": false,
-			"error":   "Invalid Authorization header format",
-		})
+	// fallback la cookie
+	if token == "" {
+		token = c.Cookies("token")
 	}
 
-	token := parts[1]
-	log.Printf("   Token: %s...\n", token[:20])
+	if token == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Missing token",
+		})
+	}
 
 	claims, err := utils.ValidateToken(token)
 	if err != nil {
-		log.Printf("   ❌ Token validation failed: %v\n", err)
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"success": false,
 			"error":   "Invalid or expired token",
 		})
 	}
 
-	log.Printf("   ✅ Token valid - UserID: %d, Role: %s\n", claims.UserID, claims.Role)
-
 	c.Locals("userID", claims.UserID)
 	c.Locals("userEmail", claims.Email)
 	c.Locals("userRole", claims.Role)
-
-	log.Printf("   ✅ Context set\n")
 	return c.Next()
 }

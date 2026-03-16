@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{.Title}}</title>
+    <script defer src="/static/auth.js"></script>
+  </head>
+  <body>
+    <h1>Register</h1>
+
+    <form id="registerForm">
+      <label>Email: <input name="email"/></label><br />
+      <label>Password: <input name="password"/></label><br />
+      <button type="submit">Create account</button>
+    </form>
+
+    <pre id="msg"></pre>
+
+    <p><a href="/login">Login</a></p>
+  </body>
+</html>

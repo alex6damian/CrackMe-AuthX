@@ -1,6 +1,8 @@
 package api
 
 import (
+	"time"
+
 	"github.com/alex6damian/CrackMe-AuthX/internal/db"
 	"github.com/alex6damian/CrackMe-AuthX/internal/models"
 	"github.com/alex6damian/CrackMe-AuthX/internal/utils"
@@ -15,8 +17,9 @@ type AuthRequest struct {
 }
 
 type AuthResponse struct {
-	Email string `json:"user"`
-	Token string `json:"token"`
+	Email     string    `json:"user"`
+	Token     string    `json:"token"`
+	CreatedAt time.Time `json:"time"`
 }
 
 type LogoutRequest struct {
@@ -73,9 +76,19 @@ func Register(c *fiber.Ctx) error {
 
 	// Response
 	response := AuthResponse{
-		Email: user.Email,
-		Token: token,
+		Email:     user.Email,
+		Token:     token,
+		CreatedAt: user.CreatedAt,
 	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:  "token",
+		Value: token,
+		Path:  "/",
+		// HTTPOnly: true,
+		SameSite: "Lax",
+		// Secure: true,
+	})
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"success": true,
@@ -89,7 +102,7 @@ func Login(c *fiber.Ctx) error {
 
 	// Parse and validate request
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User parsing"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error parsing"})
 	}
 
 	// raw sql for injection
@@ -119,6 +132,15 @@ func Login(c *fiber.Ctx) error {
 		Email: user.Email,
 		Token: token,
 	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:  "token",
+		Value: token,
+		Path:  "/",
+		// HTTPOnly: true,
+		SameSite: "Lax",
+		// Secure: true,
+	})
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"success": true,
@@ -155,9 +177,9 @@ func ForgotPassword(c *fiber.Ctx) error {
 	}
 
 	var token string
-	if user.Reset_password == "" {
+	if user.Reset_password == nil {
 		token = utils.GeneratePredictableResetToken(req.Email)
-		user.Reset_password = token
+		user.Reset_password = &token
 	}
 
 	if err := db.DB.Save(&user).Error; err != nil {
@@ -165,7 +187,7 @@ func ForgotPassword(c *fiber.Ctx) error {
 	}
 
 	response := ForgotPasswordResponse{
-		Token: user.Reset_password,
+		Token: *user.Reset_password,
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -174,7 +196,7 @@ func ForgotPassword(c *fiber.Ctx) error {
 	})
 }
 
-// Password Reset handler - POST /api/reset
+// Password Reset handler - POST /api/reset-password
 func ResetPassword(c *fiber.Ctx) error {
 	var req ResetPasswordRequest
 	// Parse and validate request
@@ -183,8 +205,11 @@ func ResetPassword(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-	if err := db.DB.Where("reset_password = ?", req.Token); err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
+	if err := db.DB.Where("reset_password = ?", req.Token).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "DB error"})
 	}
 
 	user.Password_hash = req.Password
@@ -197,5 +222,29 @@ func ResetPassword(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Password has been reset",
+	})
+}
+
+// View profile - GET /api/profile
+func ViewProfile(c *fiber.Ctx) error {
+	userID := c.Locals("userID")
+	if userID == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	userID = userID.(uint)
+
+	var user models.User
+	if err := db.DB.First(&user, userID).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "DB error"})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Profile",
+		"data": fiber.Map{
+			"email":      user.Email,
+			"role":       user.Role,
+			"created_at": user.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		},
 	})
 }
