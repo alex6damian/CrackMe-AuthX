@@ -55,8 +55,6 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User already existing"})
 	}
 
-	// TODO: hash passs
-
 	// Create user
 	user := models.User{
 		Email:         req.Email,
@@ -106,14 +104,12 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	// raw sql for injection
-
 	// Find user by email
 	var user models.User
-	if err := db.DB.Where("email=?", req.Email).First(&user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User not found"})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "DB error"})
+	if err := db.DB.Raw("SELECT * FROM users WHERE email = ?", req.Email).Scan(&user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Record not found in database",
+		})
 	}
 
 	// Check password

@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         localStorage.setItem("token", resp.data.token);
         localStorage.setItem("email", resp.data.user);
-        window.location.href = "/profile";
+        window.location.href = "/login";
       } catch (err) {
         setMsg(String(err.message || err));
       }
