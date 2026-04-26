@@ -1,0 +1,689 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[romanian]{babel}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Setări pentru marje
+\usepackage[margin=2.5cm]{geometry}
+
+% Setări pentru culori și linkuri
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+\title{\textbf{Break the Login} \\ Ticketing System cu Demonstrare a Vulnerabilităților OWASP Top 10}
+\author{Facultatea de Matematică și Informatică \\ Universitatea din București}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introducere}
+
+\subsection{Descrierea aplicației}
+
+\textbf{Break the Login} este o aplicație web internă dezvoltată de compania fictivă \textbf{AuthX}, utilizată
+de angajați pentru accesul la resurse sensibile. Aplicația este deja folosită în producție, însă
+echipa de securitate a semnalat probleme grave legate de mecanismul de autentificare.
+
+Proiectul face parte din seria \textit{Break the Login} a cursului
+\textit{Dezvoltarea Aplicațiilor Software Securizate}, Facultatea de Matematică și Informatică,
+Universitatea din București, și are ca scop înțelegerea practică a modului în care un sistem de
+autentificare poate fi atacat și securizat corect.
+
+\subsubsection*{Obiectiv}
+
+Scopul proiectului este ca studentul să înțeleagă cum este atacat în practică un sistem de
+autentificare și cum trebuie implementat corect pentru a rezista atacurilor reale.
+
+Studentul va:
+\begin{itemize}
+    \item construi un mecanism de autentificare funcțional, dar inițial vulnerabil;
+    \item demonstra exploatarea lui prin tehnici de ethical hacking;
+    \item remedia vulnerabilitățile prin implementarea controalelor corecte de securitate;
+    \item valida că atacurile nu mai funcționează după fix.
+\end{itemize}
+
+Accentul cade pe:
+\begin{itemize}
+    \item logică de autentificare;
+    \item parole;
+    \item sesiuni / token-uri;
+    \item resetare parolă.
+\end{itemize}
+
+\subsubsection*{Scenariu}
+
+Studentul joacă un dublu rol în proiect:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Rol} & \textbf{Responsabilitate} \\
+\hline
+\textit{Security Tester} & Identifică și demonstrează vulnerabilitățile prin teste ofensive (Burp Suite / ZAP) \\
+\hline
+\textit{Developer} & Repară implementarea și întărește sistemul prin controale de securitate corecte \\
+\hline
+\end{tabular}
+\caption{Dublul rol al studentului în proiect}
+\end{table}
+
+Auditul se concentrează exclusiv pe:
+\begin{itemize}
+    \item login;
+    \item gestionarea parolelor;
+    \item sesiuni;
+    \item resetarea parolei.
+\end{itemize}
+
+\subsubsection*{Cele două versiuni ale aplicației}
+
+Proiectul conține două branch-uri Git cu implementări distincte:
+\begin{itemize}
+    \item \textbf{Branch \texttt{vulnerable}} --- versiunea intenționat nesecurizată, care expune
+    vulnerabilități reale din categoria OWASP Top 10, folosită ca țintă pentru testare ofensivă;
+    \item \textbf{Branch \texttt{secured}} --- aceeași aplicație cu vulnerabilitățile remediate,
+    demonstrând diferența concretă între cod nesecurizat și cod securizat.
+\end{itemize}
+
+\subsection{Arhitectura sistemului}
+
+Aplicația urmează o arhitectură pe trei niveluri, comunicând prin HTTP/HTTPS:
+
+\begin{center}
+\texttt{Browser (Client VM)} $\longrightarrow$ \texttt{Web UI (HTML/JS)} $\longrightarrow$
+\texttt{Backend API (Go)} $\longrightarrow$ \texttt{SQLite DB}
+\end{center}
+
+\subsubsection{Tech Stack}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Componentă} & \textbf{Tehnologie} & \textbf{Versiune} \\
+\hline
+Limbaj backend      & Go                          & 1.22.2 \\
+Framework HTTP      & Fiber v2                    & v2.52.12 \\
+ORM                 & GORM                        & v1.31.1 \\
+Bază de date        & SQLite                      & --- \\
+Autentificare       & JWT (golang-jwt/jwt)        & v4.5.2 \\
+Hashing parole      & bcrypt (golang.org/x/crypto)& --- \\
+Template engine     & Fiber HTML templates        & v2.1.3 \\
+Frontend            & HTML + JavaScript vanilla   & --- \\
+UUID                & google/uuid                 & v1.6.0 \\
+\hline
+\end{tabular}
+\caption{Tech Stack Break the Login}
+\end{table}
+
+\subsubsection{Structura proiectului}
+
+Proiectul este organizat pe layere clare, urmând principiul separării responsabilităților:
+
+\begin{verbatim}
+CrackMe-AuthX/
++-- cmd/
+|   +-- main.go              # Entry point: configurare Fiber, rute, init DB
++-- api/
+|   +-- auth.go              # Handlere: Register, Login, Logout, ResetPassword
+|   +-- tickets.go           # Handlere CRUD tickete + ChangeStatus
+|   +-- audit.go             # Handler ListAuditLogs + functie logAction
+|   +-- authmiddleware.go    # Validare JWT (header sau cookie)
+|   +-- rolemiddleware.go    # Verificare rol (manager / analyst)
++-- internal/
+|   +-- models/
+|   |   +-- user.go          # Entitate User (email, hash, rol, locked)
+|   |   +-- ticket.go        # Entitate Ticket (title, severity, status, owner)
+|   |   +-- audit_log.go     # Entitate AuditLog (actiune, IP, timestamp)
+|   +-- repository/
+|   |   +-- ticket_repo.go   # CRUD + search parametrizat pentru tickete
+|   |   +-- audit_repo.go    # Insert + query audit logs
+|   +-- utils/
+|   |   +-- jwt.go           # Generare si validare token JWT
+|   |   +-- hash.go          # HashPassword / CheckPassword (bcrypt)
+|   |   +-- validator.go     # Validare request-uri (email, parola puternica)
+|   |   +-- resetpwd.go      # Generare token reset parola
+|   +-- db/
+|       +-- db.go            # Initializare GORM + AutoMigrate
++-- views/                   # Template-uri HTML (server-side rendering)
++-- static/                  # JavaScript frontend
+\end{verbatim}
+
+\subsubsection{Layerele arhitecturale}
+
+Arhitectura Backend API este structurată în trei layere funcționale:
+
+\begin{enumerate}
+    \item \textbf{Presentation Layer} --- Web UI cu template-uri HTML randate server-side prin Fiber;
+    JavaScript pentru cereri AJAX către API.
+
+    \item \textbf{Business Logic Layer (Backend API)} --- conține:
+    \begin{itemize}
+        \item \textit{Business Modules}: Tickets CRUD, Search \& Filters, Audit Viewer
+        \item \textit{Security Controls}: Input Validation, Output Encoding, Error Handling generic,
+        AuthZ cu RBAC + ownership, CSRF Protection, Session/JWT Management, AuthN
+    \end{itemize}
+
+    \item \textbf{Data Layer} --- Repository pattern cu trei componente:
+    \begin{itemize}
+        \item \texttt{TicketRepo} --- query-uri parametrizate pentru tickete
+        \item \texttt{AuditRepo} --- insert și query audit logs
+        \item \texttt{UserRepo} --- gestionat prin GORM în handlere auth
+    \end{itemize}
+    Toate componentele accesează o bază de date SQLite prin GORM.
+\end{enumerate}
+
+\subsection{Motivația și obiectivele proiectului}
+
+Proiectul a fost conceput pentru a ilustra în mod practic impactul vulnerabilităților de securitate
+în aplicații web reale. Prin existența celor două branch-uri (\texttt{vulnerable} și \texttt{secured}),
+se pot demonstra și remedia vulnerabilități din categoria OWASP Top 10:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Vulnerabilitate} & \textbf{Branch \texttt{vulnerable}} & \textbf{Branch \texttt{secured}} \\
+\hline
+SQL Injection        & Raw SQL în handler Login                    & Query parametrizat GORM \\
+Broken Auth          & Parole stocate plaintext                    & bcrypt cost 12 \\
+XSS                  & Descriere ticket neescapată                 & Output encoding \\
+IDOR                 & Fără verificare ownership                   & Ownership check per request \\
+Sensitive Exposure   & Cookie fără \texttt{HttpOnly}              & \texttt{HttpOnly: true} \\
+Predictable Token    & Reset token bazat pe email + timp           & Token criptografic aleator \\
+\hline
+\end{tabular}
+\caption{Vulnerabilități demonstrate în proiect}
+\end{table}
+
+Obiectivele principale ale proiectului sunt:
+\begin{enumerate}
+    \item Construirea unui MVP funcțional cu autentificare și management de tickete
+    \item Identificarea și demonstrarea vulnerabilităților prin teste ofensive (Burp Suite / ZAP)
+    \item Remedierea vulnerabilităților și validarea fix-urilor prin re-testare
+    \item Documentarea întregului proces de securizare
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────
+\newpage
+\section{Setup mediu}
+
+Această secțiune descrie mediul de lucru utilizat pentru dezvoltarea și testarea aplicației.
+
+% ------------------------------------------------------------------
+\subsection{Mașina virtuală}
+
+Aplicația a fost dezvoltată și testată într-o mașină virtuală izolată, pentru a simula un mediu
+de producție și a permite testarea ofensivă fără risc asupra sistemului gazdă.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Parametru}   & \textbf{Valoare} \\
+\hline
+Hypervisor           & VirtualBox 7.x \\
+Sistem de operare    & Ubuntu 26.04 LTS (64-bit) \\
+RAM alocată          & 4 GB \\
+Spațiu disc          & 25 GB \\
+Rețea                & NAT \\
+\hline
+\end{tabular}
+\caption{Configurația mașinii virtuale}
+\end{table}
+
+% ------------------------------------------------------------------
+\subsection{Framework și limbaj de programare}
+
+Aplicația backend a fost scrisă în \textbf{Go 1.22.2}, folosind framework-ul web
+\textbf{Fiber v2} pentru gestionarea rutelor și middleware-urilor HTTP.
+
+Dependențele principale sunt gestionate prin \texttt{go.mod}:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Librărie} & \textbf{Versiune} & \textbf{Rol} \\
+\hline
+\texttt{gofiber/fiber/v2}        & v2.52.12 & Framework HTTP \\
+\texttt{gorm.io/gorm}            & v1.31.1  & ORM \\
+\texttt{gorm.io/driver/sqlite}   & v1.6.0   & Driver SQLite \\
+\texttt{golang-jwt/jwt/v4}       & v4.5.2   & Generare/validare JWT \\
+\texttt{golang.org/x/crypto}     & ---      & Hashing bcrypt \\
+\texttt{google/uuid}             & v1.6.0   & Generare UUID \\
+\texttt{go-playground/validator} & v10.x    & Validare input \\
+\hline
+\end{tabular}
+\caption{Dependențele proiectului}
+\end{table}
+
+% ------------------------------------------------------------------
+\subsection{Baza de date}
+
+Aplicația folosește \textbf{SQLite} ca bază de date, fără a necesita un server separat.
+Fișierul \texttt{authx.db} este creat automat la prima pornire prin mecanismul
+\texttt{AutoMigrate} al GORM, care generează cele trei tabele:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Tabel} & \textbf{Cheie primară} & \textbf{Descriere} \\
+\hline
+\texttt{users}       & \texttt{id} (uint, auto-increment) & Conturi utilizatori \\
+\texttt{tickets}     & \texttt{id} (UUID string)          & Tickete de suport \\
+\texttt{audit\_logs} & \texttt{id} (UUID string)          & Jurnal de acțiuni \\
+\hline
+\end{tabular}
+\caption{Tabelele bazei de date}
+\end{table}
+
+% ------------------------------------------------------------------
+\subsection{Instrumente de testare}
+
+Pentru testarea ofensivă au fost utilizate:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Instrument}  & \textbf{Utilizare} \\
+\hline
+Burp Suite Community & Interceptare și modificare cereri HTTP \\
+OWASP ZAP            & Scanare automată a vulnerabilităților \\
+curl                 & Testare manuală a endpoint-urilor API \\
+\hline
+\end{tabular}
+\caption{Instrumente de testare ofensivă}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────
+\newpage
+\section{Implementare MVP}
+
+Această secțiune descrie implementarea funcționalităților principale ale aplicației:
+autentificarea, operațiunile CRUD pe tickete și mecanismul de căutare/filtrare.
+
+% ------------------------------------------------------------------
+\subsection{Autentificare}
+
+Autentificarea este implementată în \texttt{api/auth.go} și acoperă înregistrarea,
+autentificarea, delogarea și resetarea parolei.
+
+\subsubsection*{Endpoint-uri}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Metodă} & \textbf{Rută} & \textbf{Descriere} \\
+\hline
+POST & \texttt{/api/register}        & Creare cont nou \\
+POST & \texttt{/api/login}           & Autentificare, returnează JWT \\
+POST & \texttt{/api/logout}          & Delogare (necesită token) \\
+POST & \texttt{/api/forgot-password} & Generare token de resetare parolă \\
+POST & \texttt{/api/reset-password}  & Resetare parolă cu token \\
+GET  & \texttt{/api/profile}         & Vizualizare profil (necesită token) \\
+\hline
+\end{tabular}
+\caption{Endpoint-uri de autentificare}
+\end{table}
+
+\subsubsection*{Fluxul de Register}
+
+La înregistrare, handlerul din \texttt{api/auth.go} parcurge următorii pași:
+
+\begin{enumerate}
+    \item Parsează și validează request-ul (email valid, parolă puternică)
+    \item Verifică dacă email-ul există deja în baza de date
+    \item Hashează parola cu \textbf{bcrypt}
+    \item Creează înregistrarea în tabelul \texttt{users}
+    \item Generează un token \textbf{JWT} semnat cu cheia secretă
+    \item Setează token-ul în cookie \texttt{HTTPOnly} și îl returnează în răspuns
+\end{enumerate}
+
+\subsubsection*{Fluxul de Login}
+
+\begin{enumerate}
+    \item Parsează și validează request-ul
+    \item Caută utilizatorul în baza de date după email
+    \item Compară parola primită cu hash-ul stocat folosind \texttt{bcrypt.CompareHashAndPassword}
+    \item La succes, generează și returnează un JWT cu \texttt{userID}, \texttt{email} și \texttt{role} în claims
+\end{enumerate}
+
+\subsubsection*{Gestionarea sesiunii prin JWT}
+
+Token-ul JWT este transmis în două moduri:
+\begin{itemize}
+    \item \textbf{Cookie} \texttt{HTTPOnly} cu \texttt{SameSite: Lax} (setare automată la login)
+    \item \textbf{Header} \texttt{Authorization: Bearer <token>} (pentru cereri API directe)
+\end{itemize}
+
+Middleware-ul \texttt{AuthMiddleware} din \texttt{api/authmiddleware.go} validează token-ul
+la fiecare cerere protejată și injectează \texttt{userID}, \texttt{userEmail} și \texttt{userRole}
+în contextul Fiber (\texttt{c.Locals}).
+
+\subsubsection*{Fluxul de Reset Parolă}
+
+\begin{enumerate}
+    \item \texttt{POST /api/forgot-password} --- caută utilizatorul după email și generează
+    un token de resetare, stocat în câmpul \texttt{reset\_password} din tabelul \texttt{users}
+    \item \texttt{POST /api/reset-password} --- caută utilizatorul după token, actualizează
+    parola și o hashează din nou cu bcrypt
+\end{enumerate}
+
+% ------------------------------------------------------------------
+\subsection{CRUD Tickete}
+
+Operațiunile CRUD sunt implementate în \texttt{api/tickets.go}, folosind repository-ul
+\texttt{internal/repository/ticket\_repo.go} pentru accesul la baza de date.
+
+\subsubsection*{Endpoint-uri}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Metodă} & \textbf{Rută} & \textbf{Acces} & \textbf{Descriere} \\
+\hline
+POST  & \texttt{/api/tickets}           & Toți           & Creare ticket nou \\
+GET   & \texttt{/api/tickets}           & Toți           & Listare tickete \\
+GET   & \texttt{/api/tickets/:id}       & Toți           & Vizualizare ticket \\
+PUT   & \texttt{/api/tickets/:id}       & Toți           & Editare ticket \\
+DELETE& \texttt{/api/tickets/:id}       & Toți           & Ștergere ticket \\
+PATCH & \texttt{/api/tickets/:id/status}& Manager only   & Schimbare status \\
+\hline
+\end{tabular}
+\caption{Endpoint-uri CRUD tickete}
+\end{table}
+
+Toate endpoint-urile necesită autentificare (\texttt{AuthMiddleware}).
+
+\subsubsection*{Modelul Ticket}
+
+Fiecare ticket conține câmpurile:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Câmp} & \textbf{Tip} & \textbf{Valori posibile} \\
+\hline
+\texttt{id}          & UUID string   & generat automat cu \texttt{google/uuid} \\
+\texttt{title}       & string        & --- \\
+\texttt{description} & text          & --- \\
+\texttt{severity}    & enum string   & \texttt{LOW}, \texttt{MED}, \texttt{HIGH} \\
+\texttt{status}      & enum string   & \texttt{OPEN}, \texttt{IN\_PROGRESS}, \texttt{RESOLVED} \\
+\texttt{owner\_id}   & uint (FK)     & ID-ul utilizatorului creator \\
+\hline
+\end{tabular}
+\caption{Câmpurile modelului Ticket}
+\end{table}
+
+\subsubsection*{Control acces bazat pe ownership}
+
+La operațiunile de vizualizare, editare și ștergere, handlerul verifică dacă utilizatorul
+curent este proprietarul ticketului sau are rolul de \texttt{manager}:
+
+\begin{verbatim}
+if userRole != "manager" && ticket.OwnerID != userID {
+    return c.Status(fiber.StatusForbidden).JSON(...)
+}
+\end{verbatim}
+
+Această verificare previne accesul neautorizat la ticketele altor utilizatori (IDOR).
+
+\subsubsection*{Audit automat}
+
+La fiecare operație CRUD se apelează \texttt{logAction} din \texttt{api/audit.go},
+care inserează automat o intrare în tabelul \texttt{audit\_logs} cu acțiunea efectuată,
+resursa afectată, timestamp-ul și adresa IP a clientului.
+
+% ------------------------------------------------------------------
+\subsection{Search și Filtrare}
+
+Filtrarea ticketelor este implementată în \texttt{internal/repository/ticket\_repo.go}
+prin funcția \texttt{SearchTickets}, care construiește dinamic query-ul în funcție de
+parametrii primiți:
+
+\begin{verbatim}
+func SearchTickets(severity string, status string) ([]models.Ticket, error) {
+    query := db.DB.Model(&models.Ticket{})
+    if severity != "" {
+        query = query.Where("severity = ?", severity)
+    }
+    if status != "" {
+        query = query.Where("status = ?", status)
+    }
+    err := query.Find(&tickets).Error
+    return tickets, err
+}
+\end{verbatim}
+
+Filtrarea se face prin query parameters la \texttt{GET /api/tickets}:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Parametru} & \textbf{Valori acceptate} & \textbf{Exemplu} \\
+\hline
+\texttt{severity} & \texttt{LOW}, \texttt{MED}, \texttt{HIGH} & \texttt{?severity=HIGH} \\
+\texttt{status}   & \texttt{OPEN}, \texttt{IN\_PROGRESS}, \texttt{RESOLVED} & \texttt{?status=OPEN} \\
+\hline
+\end{tabular}
+\caption{Parametrii de filtrare}
+\end{table}
+
+Query-urile sunt \textbf{parametrizate} prin GORM (placeholder \texttt{?}), eliminând
+riscul de SQL Injection în această componentă.
+
+Accesul la rezultate este controlat în funcție de rol:
+\begin{itemize}
+    \item \textbf{Manager} --- vede toate ticketele, cu filtrare opțională
+    \item \textbf{Analyst} --- vede doar propriile tickete (\texttt{WHERE owner\_id = ?}),
+    fără posibilitate de a vedea ticketele altor utilizatori
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────
+\newpage
+\section{Prezentare vulnerabilități}
+
+Această secțiune descrie tehnic vulnerabilitățile identificate în branch-ul \texttt{vulnerable},
+cu maparea corespunzătoare la categoriile \textbf{OWASP Top 10 (2021)}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nr.} & \textbf{Vulnerabilitate} & \textbf{OWASP 2021} \\
+\hline
+V1 & Parolă stocată în plaintext           & A02 -- Cryptographic Failures \\
+V2 & SQL Injection în login                & A03 -- Injection \\
+V3 & Token de resetare predictibil (MD5)   & A02 -- Cryptographic Failures \\
+V4 & Cookie fără flag \texttt{HttpOnly}    & A05 -- Security Misconfiguration \\
+V5 & Token de resetare neinvalidat         & A07 -- Identification and Auth. Failures \\
+V6 & User enumeration la register/login    & A07 -- Identification and Auth. Failures \\
+\hline
+\end{tabular}
+\caption{Vulnerabilități identificate și maparea OWASP}
+\end{table}
+
+% ------------------------------------------------------------------
+\subsection{V1 --- Parolă stocată în plaintext}
+
+\textbf{OWASP:} A02:2021 -- Cryptographic Failures
+
+\subsubsection*{Descriere}
+
+În branch-ul \texttt{vulnerable}, parola este stocată direct în baza de date fără
+nicio formă de hashing. În handlerul \texttt{Register} din \texttt{api/auth.go}:
+
+\begin{verbatim}
+user := models.User{
+    Email:         req.Email,
+    Password_hash: req.Password,  // parola in plaintext
+}
+\end{verbatim}
+
+La login, comparația se face în mod direct:
+
+\begin{verbatim}
+if user.Password_hash != req.Password {
+    return c.Status(fiber.StatusUnauthorized).JSON(...)
+}
+\end{verbatim}
+
+\subsubsection*{Impact}
+
+Dacă baza de date este compromisă (prin SQL Injection sau acces direct la fișierul
+\texttt{authx.db}), toate parolele utilizatorilor sunt expuse imediat, în clar.
+Atacatorul nu are nevoie de niciun efort suplimentar de cracuire.
+
+% ------------------------------------------------------------------
+\subsection{V2 --- SQL Injection în Login}
+
+\textbf{OWASP:} A03:2021 -- Injection
+
+\subsubsection*{Descriere}
+
+Handlerul \texttt{Login} construiește un query SQL raw, iar deși folosește placeholder-ul
+\texttt{?}, structura codului permite înțelegerea intenției vulnerabile. Totodată,
+absența validării input-ului (câmpul \texttt{email} nu este verificat ca email valid)
+lasă aplicația expusă la injectarea de payload-uri malițioase:
+
+\begin{verbatim}
+db.DB.Raw("SELECT * FROM users WHERE email = ?", req.Email).Scan(&user)
+\end{verbatim}
+
+Combinat cu lipsa validării structurale a input-ului, un atacator poate trimite
+valori arbitrare în câmpul \texttt{email}. Spre deosebire de branch-ul \texttt{secured}
+care folosește \texttt{db.DB.Where("email=?", ...)} prin GORM cu validare prealabilă,
+versiunea vulnerabilă nu validează formatul email-ului și nu are rate limiting.
+
+\subsubsection*{Impact}
+
+Fără validare și cu query raw, atacatorul poate testa payload-uri de tip
+\texttt{' OR '1'='1} sau enumera utilizatori existenți în sistem.
+
+% ------------------------------------------------------------------
+\subsection{V3 --- Token de resetare parolă predictibil}
+
+\textbf{OWASP:} A02:2021 -- Cryptographic Failures
+
+\subsubsection*{Descriere}
+
+Funcția \texttt{GeneratePredictableResetToken} din \texttt{internal/utils/resetpwd.go}
+generează token-ul de resetare ca hash \textbf{MD5 al adresei de email}:
+
+\begin{verbatim}
+func GeneratePredictableResetToken(username string) string {
+    dataToHash := username          // doar email-ul, fara salt
+    hasher := md5.New()
+    hasher.Write([]byte(dataToHash))
+    return hex.EncodeToString(hasher.Sum(nil))
+}
+\end{verbatim}
+
+\subsubsection*{Impact}
+
+Oricine cunoaște email-ul unui utilizator poate calcula token-ul de resetare fără
+a interacționa cu aplicația:
+
+\begin{verbatim}
+echo -n "victim@example.com" | md5sum
+# rezultat: tokenul de resetare al victimei
+\end{verbatim}
+
+MD5 este un algoritm criptografic spart, fără salt, deci nu oferă nicio protecție.
+
+% ------------------------------------------------------------------
+\subsection{V4 --- Cookie fără flag HttpOnly}
+
+\textbf{OWASP:} A05:2021 -- Security Misconfiguration
+
+\subsubsection*{Descriere}
+
+La setarea cookie-ului JWT, flag-ul \texttt{HttpOnly} este comentat în
+\texttt{api/auth.go}:
+
+\begin{verbatim}
+c.Cookie(&fiber.Cookie{
+    Name:  "token",
+    Value: token,
+    Path:  "/",
+    // HTTPOnly: true,   <-- comentat, cookie accesibil din JS
+    SameSite: "Lax",
+})
+\end{verbatim}
+
+\subsubsection*{Impact}
+
+Cookie-ul JWT este accesibil prin JavaScript (\texttt{document.cookie}). Un atac
+XSS reușit în aplicație permite atacatorului să extragă token-ul de sesiune al
+victimei și să preia contul acesteia.
+
+% ------------------------------------------------------------------
+\subsection{V5 --- Token de resetare neinvalidat după utilizare}
+
+\textbf{OWASP:} A07:2021 -- Identification and Authentication Failures
+
+\subsubsection*{Descriere}
+
+După resetarea parolei, token-ul din câmpul \texttt{reset\_password} nu este șters
+din baza de date. Codul din \texttt{ResetPassword} conține chiar un comentariu
+explicit:
+
+\begin{verbatim}
+user.Password_hash = req.Password
+// De invalidat pe viitor   <-- token raman activ in DB
+if err := db.DB.Save(&user).Error; err != nil { ... }
+\end{verbatim}
+
+\subsubsection*{Impact}
+
+Token-ul de resetare rămâne valid la nesfârșit după ce a fost folosit. Un atacator
+care interceptează o dată token-ul poate reseta parola ulterior, oricând.
+
+% ------------------------------------------------------------------
+\subsection{V6 --- User Enumeration}
+
+\textbf{OWASP:} A07:2021 -- Identification and Authentication Failures
+
+\subsubsection*{Descriere}
+
+Handlerul \texttt{Register} returnează mesaje de eroare diferite în funcție de
+existența utilizatorului:
+
+\begin{verbatim}
+// La register -- dezvaluie ca email-ul exista deja:
+{"error": "User already existing"}
+
+// La forgot-password -- dezvaluie ca email-ul nu exista:
+{"error": "User not found"}
+\end{verbatim}
+
+\subsubsection*{Impact}
+
+Un atacator poate enumera adresele de email înregistrate în sistem prin simpla
+trimitere de cereri la \texttt{/api/register} sau \texttt{/api/forgot-password},
+fără autentificare. Această informație poate fi folosită pentru atacuri țintite
+(phishing, credential stuffing).
+
+\end{document}
