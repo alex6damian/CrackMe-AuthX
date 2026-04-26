@@ -35,6 +35,8 @@ func RunMigrations() {
 	log.Println("Running migrations")
 	err := DB.AutoMigrate(
 		&models.User{},
+		&models.Ticket{},
+		&models.AuditLog{},
 	)
 
 	if err != nil {
