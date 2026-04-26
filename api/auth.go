@@ -128,15 +128,30 @@ func Login(c *fiber.Ctx) error {
 	var user models.User
 	if err := db.DB.Where("email=?", req.Email).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User not found"})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid credentials"})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "DB error"})
 	}
 
+	// Check if account is locked
+	if user.Locked {
+		return c.Status(fiber.StatusLocked).JSON(fiber.Map{"error": "Account locked due to too many failed attempts"})
+	}
+
 	// Check password
 	if !utils.CheckPassword(user.Password_hash, req.Password) {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Wrong password"})
+		user.LoginAttempts++
+		if user.LoginAttempts >= 5 {
+			user.Locked = true
+		}
+		db.DB.Save(&user)
+		logAction(c, user.ID, "FAILED_LOGIN", "auth", "")
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid credentials"})
 	}
+
+	// Reset attempts on successful login
+	user.LoginAttempts = 0
+	db.DB.Save(&user)
 
 	// Generate JWT token
 	token, err := utils.GenerateToken(user.ID, user.Email, user.Role)

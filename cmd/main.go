@@ -2,11 +2,13 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/alex6damian/CrackMe-AuthX/api"
 	"github.com/alex6damian/CrackMe-AuthX/internal/db"
 	"github.com/gofiber/fiber/v2"
 
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html/v2"
 )
@@ -60,8 +62,32 @@ func main() {
 
 	// API routes
 	v1 := app.Group("/api")
-	v1.Post("/register", api.Register)
-	v1.Post("/login", api.Login)
+	v1.Post("/register",
+		limiter.New(limiter.Config{
+			Max:        5,
+			Expiration: 1 * time.Minute,
+			KeyGenerator: func(c *fiber.Ctx) string { return c.IP() },
+			LimitReached: func(c *fiber.Ctx) error {
+				return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+					"error": "Too many requests, try again later",
+				})
+			},
+		}),
+		api.Register,
+	)
+	v1.Post("/login",
+		limiter.New(limiter.Config{
+			Max:        10,
+			Expiration: 1 * time.Minute,
+			KeyGenerator: func(c *fiber.Ctx) string { return c.IP() },
+			LimitReached: func(c *fiber.Ctx) error {
+				return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+					"error": "Too many requests, try again later",
+				})
+			},
+		}),
+		api.Login,
+	)
 	v1.Post("/logout", api.AuthMiddleware, api.Logout)
 	v1.Post("/forgot-password", api.ForgotPassword)
 	v1.Post("/reset-password", api.ResetPassword)

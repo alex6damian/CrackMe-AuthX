@@ -12,4 +12,5 @@ type User struct {
 	Role           string    `gorm:"default: user" json:"role"`
 	CreatedAt      time.Time `json:"created_at"`
 	Locked         bool      `gorm:"default: false" json:"locked"`
+	LoginAttempts  int       `gorm:"default:0" json:"-"`
 }
