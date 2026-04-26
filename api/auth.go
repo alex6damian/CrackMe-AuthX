@@ -107,9 +107,13 @@ func Login(c *fiber.Ctx) error {
 	// Find user by email
 	var user models.User
 	if err := db.DB.Raw("SELECT * FROM users WHERE email = ?", req.Email).Scan(&user).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Record not found in database",
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "User not found",
 		})
+	}
+
+	if user.ID == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
 	}
 
 	// Check password
@@ -138,7 +142,7 @@ func Login(c *fiber.Ctx) error {
 		// Secure: true,
 	})
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"success": true,
 		"data":    response,
 	})
