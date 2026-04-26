@@ -67,6 +67,18 @@ func main() {
 	v1.Post("/reset-password", api.ResetPassword)
 	v1.Get("/profile", api.AuthMiddleware, api.ViewProfile)
 
+	// Ticket routes
+	tickets := v1.Group("/tickets", api.AuthMiddleware)
+	tickets.Post("/", api.CreateTicket)
+	tickets.Get("/", api.ListTickets)
+	tickets.Get("/:id", api.GetTicket)
+	tickets.Put("/:id", api.UpdateTicket)
+	tickets.Delete("/:id", api.DeleteTicket)
+	tickets.Patch("/:id/status", api.RoleMiddleware("manager"), api.ChangeStatus)
+
+	// Audit routes (manager only)
+	v1.Get("/audit", api.AuthMiddleware, api.RoleMiddleware("manager"), api.ListAuditLogs)
+
 	log.Println("Server started on: 8080")
 	log.Fatal(app.Listen(":8080"))
 
