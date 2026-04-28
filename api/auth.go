@@ -101,17 +101,17 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	// raw sql - vulnerable to SQL injection via string concatenation
+	// query: SELECT * FROM users WHERE email = '$email' AND password_hash = '$password'
 	var user models.User
-	query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", req.Email)
+	query := fmt.Sprintf(
+		"SELECT * FROM users WHERE email = '%s' AND password_hash = '%s'",
+		req.Email, req.Password,
+	)
 	if err := db.DB.Raw(query).Scan(&user).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
 	}
 
 	if user.ID == 0 {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
-	}
-
-	if user.Password_hash != req.Password {
 		logAction(c, user.ID, "FAILED_LOGIN", "auth", "")
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Wrong password"})
 	}
