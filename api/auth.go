@@ -44,37 +44,31 @@ type ResetPasswordRequest struct {
 func Register(c *fiber.Ctx) error {
 	var req AuthRequest
 
-	// Parse and validate request
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error parsing"})
 	}
 
-	// Check if exists
 	var existingUser models.User
 	if err := db.DB.Where("email=?", req.Email).First(&existingUser).Error; err == nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User already existing"})
 	}
 
-	// Create user
 	user := models.User{
 		Email:         req.Email,
 		Password_hash: req.Password,
 	}
 
-	// Insert user to DB
 	if err := db.DB.Create(&user).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error creating user"})
 	}
 
 	logAction(c, user.ID, "REGISTER", "auth", "")
 
-	// Generate JWT token
 	token, err := utils.GenerateToken(user.ID, user.Email, user.Role)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error generating token"})
 	}
 
-	// Response
 	response := AuthResponse{
 		Email:     user.Email,
 		Token:     token,
@@ -100,37 +94,30 @@ func Register(c *fiber.Ctx) error {
 func Login(c *fiber.Ctx) error {
 	var req AuthRequest
 
-	// Parse and validate request
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error parsing"})
 	}
 
 	// raw sql for injection
-	// Find user by email
 	var user models.User
 	if err := db.DB.Raw("SELECT * FROM users WHERE email = ?", req.Email).Scan(&user).Error; err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "User not found",
-		})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
 	}
 
 	if user.ID == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
 	}
 
-	// Check password
 	if user.Password_hash != req.Password {
 		logAction(c, user.ID, "FAILED_LOGIN", "auth", "")
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Wrong password"})
 	}
 
-	// Generate JWT token
 	token, err := utils.GenerateToken(user.ID, user.Email, user.Role)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error generating token"})
 	}
 
-	// Response
 	response := AuthResponse{
 		Email: user.Email,
 		Token: token,
@@ -153,7 +140,7 @@ func Login(c *fiber.Ctx) error {
 	})
 }
 
-// Lougout handler - POST /api/logout
+// Logout handler - POST /api/logout
 func Logout(c *fiber.Ctx) error {
 	userID, _ := c.Locals("userID").(uint)
 	logAction(c, userID, "LOGOUT", "auth", "")
@@ -171,7 +158,6 @@ func ForgotPassword(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error parsing"})
 	}
 
-	// Search DB for user
 	var user models.User
 	if err := db.DB.Where("email=?", req.Email).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -205,7 +191,6 @@ func ForgotPassword(c *fiber.Ctx) error {
 // Password Reset handler - POST /api/reset-password
 func ResetPassword(c *fiber.Ctx) error {
 	var req ResetPasswordRequest
-	// Parse and validate request
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error parsing"})
 	}
