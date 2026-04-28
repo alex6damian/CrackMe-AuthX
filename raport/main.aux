@@ -21,7 +21,7 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Framework și limbaj de programare}{7}{subsection.2.2}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Dependențele proiectului}}{7}{table.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Baza de date}{7}{subsection.2.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Tabelele bazei de date}}{7}{table.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Tabelele bazei de date}}{8}{table.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Instrumente de testare}{8}{subsection.2.4}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Instrumente de testare ofensivă}}{8}{table.7}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3}Implementare MVP}{9}{section.3}\protected@file@percent }
@@ -60,4 +60,39 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Fix 4.4 --- User Enumeration}{25}{subsection.6.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Fix 4.5 --- Gestionare nesigură a sesiunilor}{25}{subsection.6.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Fix 4.6 --- Resetare parolă nesigură}{26}{subsection.6.5}\protected@file@percent }
-\gdef \@abspage@last{26}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Demonstrare atacuri (PoC) și Analiză impact}{27}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}4.1 --- Password Policy slab: Credential Stuffing la Register}{27}{subsection.7.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Înregistrare conturi cu parole triviale}}{27}{figure.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}4.2 --- Stocare nesigură: Acces la baza de date}{28}{subsection.7.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Vizualizare parole în plaintext din baza de date}}{28}{figure.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}4.3 --- Brute Force: Lipsa Rate Limiting la Login}{29}{subsection.7.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Script de brute force pe endpoint-ul de login}}{29}{figure.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}4.4 --- User Enumeration}{30}{subsection.7.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Enumerare utilizatori prin mesaje de eroare distincte}}{30}{figure.11}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Mesaje diferite pentru email inexistent vs. parolă greșită}}{31}{figure.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.5}4.5 --- Gestionare nesigură a sesiunilor}{32}{subsection.7.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Cookie JWT accesibil din JavaScript și reutilizare sesiune după logout}}{32}{figure.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.6}4.6 --- Resetare parolă nesigură: Token predictibil}{33}{subsection.7.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Calcularea token-ului de resetare fără a interacționa cu aplicația}}{33}{figure.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Implementare fix}{34}{section.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Fix 4.1 \& 4.2 --- Password Policy + Stocare parolă}{34}{subsection.8.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Fix 4.3 --- Brute Force / Rate Limiting}{34}{subsection.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}Fix 4.4 --- User Enumeration}{35}{subsection.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.4}Fix 4.5 --- Gestionare nesigură a sesiunilor}{35}{subsection.8.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.5}Fix 4.6 --- Resetare parolă nesigură}{36}{subsection.8.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Re-test}{37}{section.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}4.1 \& 4.2 --- Credential Stuffing și Stocare parolă}{37}{subsection.9.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Înregistrare cu parolă slabă respinsă pe branch-ul secured}}{37}{figure.15}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces Parole stocate ca hash bcrypt în baza de date}}{38}{figure.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}4.3 --- Brute Force / Rate Limiting}{39}{subsection.9.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces Rate limiter: cereri excesive returnează 429 Too Many Requests}}{39}{figure.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3}4.4 --- User Enumeration}{40}{subsection.9.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces Răspuns uniform --- enumerarea nu mai e posibilă}}{40}{figure.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4}4.5 --- Invalidare token la logout}{41}{subsection.9.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {19}{\ignorespaces Token JWT invalidat după logout: cereri ulterioare returnează 401}}{41}{figure.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.5}4.6 --- Token de resetare parolă}{42}{subsection.9.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {20}{\ignorespaces Token de resetare invalid după prima utilizare}}{42}{figure.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {10}Audit \& Logging}{43}{section.10}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {21}{\ignorespaces Jurnal de audit --- acțiuni REGISTER, LOGIN, FAILED\_LOGIN, LOGOUT}}{43}{figure.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {11}Concluzii}{44}{section.11}\protected@file@percent }
+\gdef \@abspage@last{44}

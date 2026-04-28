@@ -29,7 +29,7 @@
 }
 
 \title{\textbf{Break the Login} \\ Ticketing System cu Demonstrare a Vulnerabilităților OWASP Top 10}
-\author{Facultatea de Matematică și Informatică \\ Universitatea din București}
+\author{Damian Alexandru \\ Grupa 342 \\ Facultatea de Matematică și Informatică \\ Universitatea din București}
 \date{\today}
 
 \begin{document}
@@ -43,17 +43,17 @@
 
 \subsection{Descrierea aplicației}
 
-\textbf{Break the Login} este o aplicație web internă dezvoltată de compania fictivă \textbf{AuthX}, utilizată
-de angajați pentru accesul la resurse sensibile. Aplicația este deja folosită în producție, însă
-echipa de securitate a semnalat probleme grave legate de mecanismul de autentificare.
+\textbf{Break the Login} e un proiect construit în jurul aplicației interne a companiei fictive \textbf{AuthX}, folosită
+de angajați pentru acces la resurse interne. Rulează deja în producție, dar
+echipa de securitate a ridicat semne de întrebare serioase legate de autentificare.
 
 Proiectul are ca scop înțelegerea practică a modului în care un sistem de
 autentificare poate fi atacat și securizat corect.
 
 \subsubsection*{Obiectiv}
 
-Scopul proiectului este ca studentul să înțeleagă cum este atacat în practică un sistem de
-autentificare și cum trebuie implementat corect pentru a rezista atacurilor reale.
+Pe scurt, ideea e să vedem concret cum se sparg lucrurile și cum le reparăm.
+Nu teoretic, ci cu cod real, atacuri reale și fix-uri care chiar funcționează.
 
 Studentul va:
 \begin{itemize}
@@ -109,7 +109,7 @@ Proiectul conține două branch-uri Git cu implementări distincte:
 
 \subsection{Arhitectura sistemului}
 
-Aplicația urmează o arhitectură pe trei niveluri, comunicând prin HTTP/HTTPS:
+Din punct de vedere tehnic, aplicația e împărțită în trei straturi care comunică prin HTTP:
 
 \begin{center}
 \texttt{Browser (Client VM)} $\longrightarrow$ \texttt{Web UI (HTML/JS)} $\longrightarrow$
@@ -140,7 +140,7 @@ UUID                & google/uuid                 & v1.6.0 \\
 
 \subsubsection{Structura proiectului}
 
-Proiectul este organizat pe layere clare, urmând principiul separării responsabilităților:
+Structura directoarelor arată cam așa, fiecare folder cu rolul lui bine delimitat:
 
 \begin{verbatim}
 CrackMe-AuthX/
@@ -173,7 +173,7 @@ CrackMe-AuthX/
 
 \subsubsection{Layerele arhitecturale}
 
-Arhitectura Backend API este structurată în trei layere funcționale:
+Backend-ul e structurat în trei niveluri distincte:
 
 \begin{enumerate}
     \item \textbf{Presentation Layer} --- Web UI cu template-uri HTML randate server-side prin Fiber;
@@ -230,7 +230,7 @@ Obiectivele principale ale proiectului sunt:
 \newpage
 \section{Setup mediu}
 
-Această secțiune descrie mediul de lucru utilizat pentru dezvoltarea și testarea aplicației.
+Mai jos e configurația folosită pe parcursul proiectului, atât pentru development cât și pentru testele ofensive.
 
 % ------------------------------------------------------------------
 \subsection{Mașina virtuală}
@@ -324,8 +324,8 @@ curl                 & Testare manuală a endpoint-urilor API \\
 \newpage
 \section{Implementare MVP}
 
-Această secțiune descrie implementarea funcționalităților principale ale aplicației:
-autentificarea, operațiunile CRUD pe tickete și mecanismul de căutare/filtrare.
+În continuare e descrisă implementarea efectivă --- autentificare, tickete și filtrare.
+Codul rulează pe ambele branch-uri, diferența e doar în ce privește securitatea.
 
 % ------------------------------------------------------------------
 \subsection{Autentificare}
@@ -512,8 +512,8 @@ Accesul la rezultate este controlat în funcție de rol:
 \newpage
 \section{Prezentare vulnerabilități}
 
-Această secțiune descrie tehnic vulnerabilitățile identificate în branch-ul \texttt{vulnerable},
-cu maparea corespunzătoare la categoriile \textbf{OWASP Top 10 (2021)}.
+Mai jos sunt descrise vulnerabilitățile găsite în branch-ul \texttt{vulnerable}, fiecare
+mapată la categoria corespunzătoare din \textbf{OWASP Top 10 (2021)}.
 
 \begin{table}[H]
 \centering
@@ -539,8 +539,8 @@ V6 & User enumeration la register/login    & A07 -- Identification and Auth. Fai
 
 \subsubsection*{Descriere}
 
-În branch-ul \texttt{vulnerable}, parola este stocată direct în baza de date fără
-nicio formă de hashing. În handlerul \texttt{Register} din \texttt{api/auth.go}:
+Pe \texttt{vulnerable}, parola ajunge direct în DB exact cum a fost trimisă de utilizator.
+Nici măcar o funcție hash simplă nu e aplicată. Codul din \texttt{Register}:
 
 \begin{verbatim}
 user := models.User{
@@ -559,9 +559,8 @@ if user.Password_hash != req.Password {
 
 \subsubsection*{Impact}
 
-Dacă baza de date este compromisă (prin SQL Injection sau acces direct la fișierul
-\texttt{authx.db}), toate parolele utilizatorilor sunt expuse imediat, în clar.
-Atacatorul nu are nevoie de niciun efort suplimentar de cracuire.
+Dacă cineva pune mâna pe fișierul \texttt{authx.db} --- fie prin SQL Injection, fie
+altfel --- vede instant toate parolele. Nu are nevoie să crackuiască nimic.
 
 % ------------------------------------------------------------------
 \subsection{V2 --- SQL Injection în Login}
@@ -610,15 +609,14 @@ func GeneratePredictableResetToken(username string) string {
 
 \subsubsection*{Impact}
 
-Oricine cunoaște email-ul unui utilizator poate calcula token-ul de resetare fără
-a interacționa cu aplicația:
+Dacă știi email-ul cuiva, poți calcula singur token-ul lui de resetare, fără să atingi aplicația:
 
 \begin{verbatim}
 echo -n "victim@example.com" | md5sum
 # rezultat: tokenul de resetare al victimei
 \end{verbatim}
 
-MD5 este un algoritm criptografic spart, fără salt, deci nu oferă nicio protecție.
+MD5 e considerat spart de ani buni, iar fără salt nu există nicio barieră reală.
 
 % ------------------------------------------------------------------
 \subsection{V4 --- Cookie fără flag HttpOnly}
@@ -642,9 +640,8 @@ c.Cookie(&fiber.Cookie{
 
 \subsubsection*{Impact}
 
-Cookie-ul JWT este accesibil prin JavaScript (\texttt{document.cookie}). Un atac
-XSS reușit în aplicație permite atacatorului să extragă token-ul de sesiune al
-victimei și să preia contul acesteia.
+Fără \texttt{HttpOnly}, orice script care rulează în pagină poate citi cookie-ul.
+Dacă există și un XSS undeva în aplicație, tokenul victimei e compromis în câteva linii de JS.
 
 % ------------------------------------------------------------------
 \subsection{V5 --- Token de resetare neinvalidat după utilizare}
@@ -665,8 +662,8 @@ if err := db.DB.Save(&user).Error; err != nil { ... }
 
 \subsubsection*{Impact}
 
-Token-ul de resetare rămâne valid la nesfârșit după ce a fost folosit. Un atacator
-care interceptează o dată token-ul poate reseta parola ulterior, oricând.
+Token-ul nu e șters din DB după ce e folosit, deci rămâne valabil indefinit.
+Dacă îl interceptezi o dată, poți reseta parola oricând vrei după aceea.
 
 % ------------------------------------------------------------------
 \subsection{V6 --- User Enumeration}
@@ -688,18 +685,17 @@ existența utilizatorului:
 
 \subsubsection*{Impact}
 
-Un atacator poate enumera adresele de email înregistrate în sistem prin simpla
-trimitere de cereri la \texttt{/api/register} sau \texttt{/api/forgot-password},
-fără autentificare. Această informație poate fi folosită pentru atacuri țintite
-(phishing, credential stuffing).
+Câteva sute de cereri la \texttt{/api/register} sau \texttt{/api/forgot-password} și
+poți afla ce adrese de email sunt înregistrate în sistem. Fără autentificare, fără nicio barieră.
+Lista rezultată e utilă direct pentru phishing sau credential stuffing.
 
 
 % ─────────────────────────────────────────────────────────────────
 \newpage
 \section{Demonstrare atacuri (PoC) și Analiză impact}
 
-Această secțiune prezintă dovezile practice ale vulnerabilităților identificate
-în branch-ul \texttt{vulnerable}, cu analiza impactului pentru fiecare atac.
+Capturile de mai jos arată atacurile în acțiune pe branch-ul \texttt{vulnerable}.
+Pentru fiecare e explicat pe scurt ce poate obține un atacator dacă exploatează vulnerabilitatea.
 
 % ------------------------------------------------------------------
 \subsection{4.1 --- Password Policy slab: Credential Stuffing la Register}
@@ -714,8 +710,7 @@ Aplicația acceptă parole extrem de slabe (\texttt{123456}, \texttt{admin}, \te
 fără nicio validare. Un atacator poate crea automat sute de conturi cu parole previzibile,
 apoi folosi aceleași credențiale pe alte servicii (\textbf{credential stuffing}).
 
-\textbf{Impact:} Compromiterea masivă de conturi, atât în aplicație cât și pe platforme externe
-unde victimele reutilizează parola.
+\textbf{Impact:} Sute de conturi cu parole previzibile înregistrate în câteva secunde. Pe alte servicii unde aceleași parole sunt reutilizate, efectul e și mai mare.
 
 % ------------------------------------------------------------------
 \subsection{4.2 --- Stocare nesigură: Acces la baza de date}
@@ -730,7 +725,7 @@ Parola este stocată în clar în coloana \texttt{password\_hash} din tabelul \t
 Accesând fișierul \texttt{authx.db} (prin SQL Injection sau acces fizic la server),
 atacatorul vede imediat toate parolele utilizatorilor.
 
-\textbf{Impact:} Compromiterea imediată a tuturor conturilor, fără niciun efort de cracuire.
+\textbf{Impact:} Toate parolele sunt vizibile direct, fără niciun pas suplimentar. Un singur acces la fișierul DB e suficient.
 
 % ------------------------------------------------------------------
 \subsection{4.3 --- Brute Force: Lipsa Rate Limiting la Login}
@@ -744,8 +739,7 @@ atacatorul vede imediat toate parolele utilizatorilor.
 Aplicația nu limitează numărul de cereri pe \texttt{/api/login} și nu blochează contul
 după încercări repetate. Un script simplu poate testa mii de parole fără nicio restricție.
 
-\textbf{Impact:} Atacatorul găsește parola oricărui utilizator prin forță brută,
-în special dacă parola e scurtă sau din wordlist-uri comune.
+\textbf{Impact:} Fără nicio limitare, un script poate testa zeci de mii de parole pe minut. Conturile cu parole slabe cad în secunde.
 
 % ------------------------------------------------------------------
 \subsection{4.4 --- User Enumeration}
@@ -766,8 +760,7 @@ Endpoint-urile \texttt{/api/register} și \texttt{/api/forgot-password} returnea
 diferite în funcție de existența email-ului. Atacatorul poate trimite cereri automate
 și construi o listă cu adresele înregistrate în sistem.
 
-\textbf{Impact:} Lista de utilizatori valizi poate fi folosită pentru atacuri țintite
-de phishing sau ca input pentru brute force.
+\textbf{Impact:} Cu o listă de emailuri valide, atacatorul știe exact pe cine să targeteze --- brute force, phishing, totul devine mai eficient.
 
 % ------------------------------------------------------------------
 \subsection{4.5 --- Gestionare nesigură a sesiunilor}
@@ -782,8 +775,7 @@ Cookie-ul JWT nu are flag-ul \texttt{HttpOnly}, deci este accesibil prin
 \texttt{document.cookie}. Un atac XSS reușit extrage token-ul de sesiune al victimei.
 În plus, după logout token-ul rămâne valid — serverul nu îl invalidează.
 
-\textbf{Impact:} Atacatorul poate prelua sesiunea victimei (session hijacking) și
-rămâne autentificat chiar și după ce victima s-a delogat.
+\textbf{Impact:} Session hijacking complet --- tokenul furat funcționează până expiră, chiar dacă victima s-a delogat între timp.
 
 % ------------------------------------------------------------------
 \subsection{4.6 --- Resetare parolă nesigură: Token predictibil}
@@ -798,16 +790,15 @@ Token-ul de resetare este MD5 aplicat pe email-ul utilizatorului, fără salt ș
 expirare. Oricine cunoaște email-ul victimei poate calcula token-ul local și reseta
 parola fără să aibă acces la inbox-ul acesteia.
 
-\textbf{Impact:} Preluare completă a oricărui cont cunoscând doar adresa de email.
-Token-ul rămâne valid și după utilizare, permițând atacuri repetate.
+\textbf{Impact:} Cont preluat fără să știi parola, fără să ai acces la inbox. Și poți repeta oricând, token-ul nu expiră și nu se șterge.
 
 
 % ─────────────────────────────────────────────────────────────────
 \newpage
 \section{Implementare fix}
 
-Această secțiune prezintă, pentru fiecare vulnerabilitate, codul din branch-ul
-\texttt{vulnerable} (cod nesecurizat) față de branch-ul \texttt{secured} (cod remediat).
+Pentru fiecare problemă găsită, am pus alăturat codul din \texttt{vulnerable} și varianta
+reparată din \texttt{secured}, ca să fie clar exact ce s-a schimbat și de ce.
 
 % ------------------------------------------------------------------
 \subsection{Fix 4.1 \& 4.2 --- Password Policy + Stocare parolă}
@@ -834,8 +825,7 @@ user := models.User{
 }
 \end{lstlisting}
 
-Parola nu mai poate fi citită direct din baza de date --- chiar dacă aceasta este compromisă,
-atacatorul obține doar hash-uri bcrypt ireversibile.
+Chiar dacă DB-ul e compromis, tot ce vede atacatorul sunt hash-uri bcrypt --- ireversibile practic.
 
 % ------------------------------------------------------------------
 \subsection{Fix 4.3 --- Brute Force / Rate Limiting}
@@ -894,7 +884,7 @@ db.DB.Save(&user)
 {"error": "Wrong credentials"}    // la register (email existent)
 \end{lstlisting}
 
-Atacatorul nu mai poate distinge între un email inexistent și o parolă greșită.
+Din exterior nu mai există nicio diferență de răspuns, deci enumerarea nu mai funcționează.
 
 % ------------------------------------------------------------------
 \subsection{Fix 4.5 --- Gestionare nesigură a sesiunilor}
@@ -921,8 +911,7 @@ c.Cookie(&fiber.Cookie{
 })
 \end{lstlisting}
 
-Cu \texttt{HttpOnly: true}, un script injectat prin XSS nu mai poate citi
-token-ul JWT din cookie.
+Cu \texttt{HttpOnly} activ, \texttt{document.cookie} nu mai returnează token-ul, indiferent ce script rulează în pagină.
 
 % ------------------------------------------------------------------
 \subsection{Fix 4.6 --- Resetare parolă nesigură}
@@ -956,7 +945,381 @@ user.Reset_password = nil    // token sters din DB
 db.DB.Save(&user)
 \end{lstlisting}
 
-Token-ul nu mai poate fi calculat cunoscând email-ul și devine invalid imediat
-după prima utilizare.
+Token-ul e acum 32 de bytes aleatori --- nu mai poate fi dedus din email. Și dispare din DB imediat după ce e folosit.
+
+
+% ─────────────────────────────────────────────────────────────────
+\newpage
+\section{Demonstrare atacuri (PoC) și Analiză impact}
+
+Capturile de mai jos arată atacurile în acțiune pe branch-ul \texttt{vulnerable}.
+Pentru fiecare e explicat pe scurt ce poate obține un atacator dacă exploatează vulnerabilitatea.
+
+% ------------------------------------------------------------------
+\subsection{4.1 --- Password Policy slab: Credential Stuffing la Register}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi atacuri/register_bf.png}
+  \caption{Înregistrare conturi cu parole triviale}
+\end{figure}
+
+Aplicația acceptă parole extrem de slabe (\texttt{123456}, \texttt{admin}, \texttt{abc})
+fără nicio validare. Un script poate crea sute de conturi cu parole previzibile
+și folosi aceleași credențiale pe alte servicii (\textbf{credential stuffing}).
+
+\textbf{Impact:} Sute de conturi cu parole previzibile înregistrate în câteva secunde. Pe alte servicii unde aceleași parole sunt reutilizate, efectul e și mai mare.
+
+% ------------------------------------------------------------------
+\subsection{4.2 --- Stocare nesigură: Acces la baza de date}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi atacuri/acces_bd.png}
+  \caption{Vizualizare parole în plaintext din baza de date}
+\end{figure}
+
+Parola e stocată în clar în coloana \texttt{password\_hash} din \texttt{users}.
+Accesând fișierul \texttt{authx.db} prin orice metodă, toate parolele sunt vizibile imediat.
+
+\textbf{Impact:} Toate parolele sunt vizibile direct, fără niciun pas suplimentar. Un singur acces la fișierul DB e suficient.
+
+% ------------------------------------------------------------------
+\subsection{4.3 --- Brute Force: Lipsa Rate Limiting la Login}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi atacuri/login_force.png}
+  \caption{Script de brute force pe endpoint-ul de login}
+\end{figure}
+
+Aplicația nu limitează cererile pe \texttt{/api/login} și nu blochează contul
+după încercări repetate. Un script simplu testează mii de parole fără nicio restricție.
+
+\textbf{Impact:} Fără nicio limitare, un script poate testa zeci de mii de parole pe minut. Conturile cu parole slabe cad în secunde.
+
+% ------------------------------------------------------------------
+\subsection{4.4 --- User Enumeration}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi atacuri/userenum.png}
+  \caption{Enumerare utilizatori prin mesaje de eroare distincte}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi atacuri/login_messages.png}
+  \caption{Mesaje diferite pentru email inexistent vs. parolă greșită}
+\end{figure}
+
+Endpoint-urile \texttt{/api/register} și \texttt{/api/forgot-password} răspund diferit
+în funcție de existența email-ului, permițând construirea unei liste de utilizatori valizi.
+
+\textbf{Impact:} Cu o listă de emailuri valide, atacatorul știe exact pe cine să targeteze --- brute force, phishing, totul devine mai eficient.
+
+% ------------------------------------------------------------------
+\subsection{4.5 --- Gestionare nesigură a sesiunilor}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi atacuri/session_reuse.png}
+  \caption{Cookie JWT accesibil din JavaScript și reutilizare sesiune după logout}
+\end{figure}
+
+Cookie-ul JWT fără \texttt{HttpOnly} poate fi citit din orice script din pagină.
+La asta se adaugă faptul că după logout tokenul rămâne valid pe server.
+
+\textbf{Impact:} Session hijacking complet --- tokenul furat funcționează până expiră, chiar dacă victima s-a delogat între timp.
+
+% ------------------------------------------------------------------
+\subsection{4.6 --- Resetare parolă nesigură: Token predictibil}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi atacuri/pwd_reset_token.png}
+  \caption{Calcularea token-ului de resetare fără a interacționa cu aplicația}
+\end{figure}
+
+Token-ul de resetare e MD5 aplicat pe email, fără salt, fără expirare.
+Știind emailul victimei, îi calculezi tokenul local și resetezi parola fără să îi accesezi inbox-ul.
+
+\textbf{Impact:} Cont preluat fără să știi parola, fără să ai acces la inbox. Și poți repeta oricând, token-ul nu expiră și nu se șterge.
+
+% ─────────────────────────────────────────────────────────────────
+\newpage
+\section{Implementare fix}
+
+Pentru fiecare problemă găsită, am pus alăturat codul din \texttt{vulnerable} și varianta
+reparată din \texttt{secured}, ca să fie clar exact ce s-a schimbat și de ce.
+
+% ------------------------------------------------------------------
+\subsection{Fix 4.1 \& 4.2 --- Password Policy + Stocare parolă}
+
+\textbf{Vulnerable} --- parola stocată direct în plaintext, fără validare:
+\begin{lstlisting}[language={}]
+// api/auth.go (vulnerable)
+user := models.User{
+    Email:         req.Email,
+    Password_hash: req.Password,  // plaintext
+}
+\end{lstlisting}
+
+\textbf{Secured} --- validare input + hashing bcrypt:
+\begin{lstlisting}[language={}]
+// api/auth.go (secured)
+if err := utils.ValidateStruct(&req); err != nil {
+    return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+}
+hashedPassword, _ := utils.HashPassword(req.Password) // bcrypt cost 12
+user := models.User{
+    Email:         req.Email,
+    Password_hash: hashedPassword,
+}
+\end{lstlisting}
+
+Chiar dacă DB-ul e compromis, tot ce vede atacatorul sunt hash-uri bcrypt --- ireversibile practic.
+
+% ------------------------------------------------------------------
+\subsection{Fix 4.3 --- Brute Force / Rate Limiting}
+
+\textbf{Vulnerable} --- nicio restricție pe numărul de cereri sau încercări:
+\begin{lstlisting}[language={}]
+// cmd/main.go (vulnerable)
+v1.Post("/login", api.Login)
+
+// api/auth.go (vulnerable) - nicio verificare locked, niciun contor
+if user.Password_hash != req.Password {
+    return c.Status(401).JSON(fiber.Map{"error": "Wrong password"})
+}
+\end{lstlisting}
+
+\textbf{Secured} --- rate limiter per IP + blocare cont după 5 încercări:
+\begin{lstlisting}[language={}]
+// cmd/main.go (secured)
+v1.Post("/login",
+    limiter.New(limiter.Config{
+        Max: 10, Expiration: 1 * time.Minute,
+        KeyGenerator: func(c *fiber.Ctx) string { return c.IP() },
+    }),
+    api.Login,
+)
+
+// api/auth.go (secured)
+if user.Locked {
+    return c.Status(423).JSON(fiber.Map{"error": "Account locked"})
+}
+if !utils.CheckPassword(user.Password_hash, req.Password) {
+    user.LoginAttempts++
+    if user.LoginAttempts >= 5 { user.Locked = true }
+    db.DB.Save(&user)
+    return c.Status(401).JSON(fiber.Map{"error": "Invalid credentials"})
+}
+user.LoginAttempts = 0
+db.DB.Save(&user)
+\end{lstlisting}
+
+% ------------------------------------------------------------------
+\subsection{Fix 4.4 --- User Enumeration}
+
+\textbf{Vulnerable} --- mesaje diferite care dezvăluie existența contului:
+\begin{lstlisting}[language={}]
+{"error": "User not found"}        // la email inexistent
+{"error": "Wrong password"}        // la parola gresita
+{"error": "User already existing"} // la register
+\end{lstlisting}
+
+\textbf{Secured} --- mesaj uniform indiferent de cauza erorii:
+\begin{lstlisting}[language={}]
+{"error": "Invalid credentials"}  // acelasi mesaj in toate cazurile
+{"error": "Wrong credentials"}    // la register (email existent)
+\end{lstlisting}
+
+Din exterior nu mai există nicio diferență de răspuns, deci enumerarea nu mai funcționează.
+
+% ------------------------------------------------------------------
+\subsection{Fix 4.5 --- Gestionare nesigură a sesiunilor}
+
+\textbf{Vulnerable} --- cookie accesibil din JavaScript:
+\begin{lstlisting}[language={}]
+c.Cookie(&fiber.Cookie{
+    Name:  "token",
+    Value: token,
+    // HTTPOnly: true,   <-- comentat
+    SameSite: "Lax",
+})
+\end{lstlisting}
+
+\textbf{Secured} --- cookie protejat cu \texttt{HttpOnly} + invalidare la logout:
+\begin{lstlisting}[language={}]
+c.Cookie(&fiber.Cookie{
+    Name:     "token",
+    Value:    token,
+    HTTPOnly: true,
+    SameSite: "Lax",
+})
+
+// La logout - token adaugat in blacklist server-side
+utils.BlacklistToken(token)
+\end{lstlisting}
+
+Cu \texttt{HttpOnly} activ, \texttt{document.cookie} nu mai returnează token-ul, indiferent ce script rulează în pagină.
+
+% ------------------------------------------------------------------
+\subsection{Fix 4.6 --- Resetare parolă nesigură}
+
+\textbf{Vulnerable} --- token predictibil (MD5 al email-ului), neinvalidat:
+\begin{lstlisting}[language={}]
+func GeneratePredictableResetToken(username string) string {
+    hasher := md5.New()
+    hasher.Write([]byte(username)) // doar email, fara salt
+    return hex.EncodeToString(hasher.Sum(nil))
+}
+
+user.Password_hash = req.Password
+// De invalidat pe viitor  <-- niciodata implementat
+\end{lstlisting}
+
+\textbf{Secured} --- token criptografic aleator de 32 bytes, invalidat după utilizare:
+\begin{lstlisting}[language={}]
+func GenerateSecureResetToken() string {
+    bytes := make([]byte, 32)
+    rand.Read(bytes)          // crypto/rand, nu predictibil
+    return hex.EncodeToString(bytes)
+}
+
+user.Password_hash = hashedNewPassword
+user.Reset_password = nil    // token sters din DB
+db.DB.Save(&user)
+\end{lstlisting}
+
+Token-ul e acum 32 de bytes aleatori --- nu mai poate fi dedus din email. Și dispare din DB imediat după ce e folosit.
+
+% ─────────────────────────────────────────────────────────────────
+\newpage
+\section{Re-test}
+
+Același set de atacuri rulat pe branch-ul \texttt{secured} --- rezultatele arată că fix-urile funcționează.
+
+% ------------------------------------------------------------------
+\subsection{4.1 \& 4.2 --- Credential Stuffing și Stocare parolă}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi retest/credstuff_fail.png}
+  \caption{Înregistrare cu parolă slabă respinsă pe branch-ul secured}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi retest/parole_hashed.png}
+  \caption{Parole stocate ca hash bcrypt în baza de date}
+\end{figure}
+
+Validarea respinge parolele triviale, iar DB-ul conține doar hash-uri bcrypt.
+
+% ------------------------------------------------------------------
+\subsection{4.3 --- Brute Force / Rate Limiting}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi retest/rate_limiter_bruteforce.png}
+  \caption{Rate limiter: cereri excesive returnează 429 Too Many Requests}
+\end{figure}
+
+Scriptul de brute force e oprit după 10 cereri/minut per IP.
+Contul se blochează automat după 5 greșeli consecutive (423 Locked).
+
+% ------------------------------------------------------------------
+\subsection{4.4 --- User Enumeration}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi retest/user_enum.png}
+  \caption{Răspuns uniform --- enumerarea nu mai e posibilă}
+\end{figure}
+
+Același mesaj indiferent dacă emailul există sau nu.
+
+% ------------------------------------------------------------------
+\subsection{4.5 --- Invalidare token la logout}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi retest/invalidare_token.png}
+  \caption{Token JWT invalidat după logout: cereri ulterioare returnează 401}
+\end{figure}
+
+Tokenul e blacklistat la logout. Orice cerere ulterioară cu el primește 401.
+
+% ------------------------------------------------------------------
+\subsection{4.6 --- Token de resetare parolă}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{dovezi retest/reset_password_token_invalidation.png}
+  \caption{Token de resetare invalid după prima utilizare}
+\end{figure}
+
+Token generat criptografic, șters din DB imediat după folosire.
+A doua cerere cu același token primește 401.
+
+% ─────────────────────────────────────────────────────────────────
+\newpage
+\section{Audit \& Logging}
+
+Tot ce se întâmplă în aplicație lasă o urmă în \texttt{audit\_logs}.
+Prin \texttt{GET /api/audit}, un manager vede exact cine a făcut ce și când.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{audit_logs.png}
+  \caption{Jurnal de audit --- acțiuni REGISTER, LOGIN, FAILED\_LOGIN, LOGOUT}
+\end{figure}
+
+Fiecare intrare conține:
+\begin{itemize}
+    \item \textbf{action} --- tipul evenimentului: \texttt{REGISTER}, \texttt{LOGIN},
+    \texttt{FAILED\_LOGIN}, \texttt{LOGOUT}, \texttt{FORGOT\_PASSWORD}, \texttt{RESET\_PASSWORD},
+    \texttt{CREATE\_TICKET}, \texttt{UPDATE\_TICKET}, \texttt{DELETE\_TICKET}
+    \item \textbf{user\_id} --- cine a generat evenimentul
+    \item \textbf{ip\_address} --- de unde a venit cererea
+    \item \textbf{timestamp} --- când s-a întâmplat
+\end{itemize}
+
+În captură se vede clar pattern-ul --- mai multe \texttt{FAILED\_LOGIN} consecutive pe același user,
+urmate de un val de \texttt{REGISTER}-uri automate. Genul ăsta de activitate iese imediat în evidență
+și poate fi detectat automat.
+
+% ─────────────────────────────────────────────────────────────────
+\newpage
+\section{Concluzii}
+
+\subsection*{Lecții învățate}
+
+\begin{enumerate}
+    \item \textbf{Niciodată plaintext.} Parolele trebuie hashate cu un algoritm lent
+    (\texttt{bcrypt}, \texttt{argon2}) înainte de stocare. MD5 și SHA1 nu sunt potrivite
+    pentru parole.
+
+    \item \textbf{Rate limiting și blocare cont sunt esențiale.} Fără ele, orice endpoint
+    de autentificare e vulnerabil la brute force indiferent cât de complexă e parola.
+
+    \item \textbf{Mesajele de eroare dezvăluie informații.} Răspunsuri diferite pentru
+    ``email inexistent'' față de ``parolă greșită'' permit enumerarea utilizatorilor.
+    Mesajul trebuie să fie același în orice caz.
+
+    \item \textbf{Cookie-urile de sesiune trebuie protejate.} \texttt{HttpOnly} blochează
+    furtul de token prin XSS. \texttt{SameSite} reduce riscul CSRF.
+
+    \item \textbf{Token-urile trebuie invalidate.} JWT-urile sunt stateless, dar logout-ul
+    real necesită o blacklist server-side. Token-urile de reset se șterg imediat după utilizare.
+
+    \item \textbf{Audit logging e critic.} Fără jurnal, un atac poate trece neobservat.
+    \texttt{FAILED\_LOGIN} repetat e un semnal clar de brute force.
+
+    \item \textbf{Testarea pe ambele branch-uri} confirmă că fix-urile funcționează și că
+    nu au apărut regresii --- re-testarea e la fel de importantă ca implementarea.
+\end{enumerate}
 
 \end{document}

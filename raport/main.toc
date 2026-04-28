@@ -35,3 +35,24 @@
 \contentsline {subsection}{\numberline {6.3}Fix 4.4 --- User Enumeration}{25}{subsection.6.3}%
 \contentsline {subsection}{\numberline {6.4}Fix 4.5 --- Gestionare nesigură a sesiunilor}{25}{subsection.6.4}%
 \contentsline {subsection}{\numberline {6.5}Fix 4.6 --- Resetare parolă nesigură}{26}{subsection.6.5}%
+\contentsline {section}{\numberline {7}Demonstrare atacuri (PoC) și Analiză impact}{27}{section.7}%
+\contentsline {subsection}{\numberline {7.1}4.1 --- Password Policy slab: Credential Stuffing la Register}{27}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}4.2 --- Stocare nesigură: Acces la baza de date}{28}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}4.3 --- Brute Force: Lipsa Rate Limiting la Login}{29}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}4.4 --- User Enumeration}{30}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}4.5 --- Gestionare nesigură a sesiunilor}{32}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}4.6 --- Resetare parolă nesigură: Token predictibil}{33}{subsection.7.6}%
+\contentsline {section}{\numberline {8}Implementare fix}{34}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Fix 4.1 \& 4.2 --- Password Policy + Stocare parolă}{34}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Fix 4.3 --- Brute Force / Rate Limiting}{34}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Fix 4.4 --- User Enumeration}{35}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}Fix 4.5 --- Gestionare nesigură a sesiunilor}{35}{subsection.8.4}%
+\contentsline {subsection}{\numberline {8.5}Fix 4.6 --- Resetare parolă nesigură}{36}{subsection.8.5}%
+\contentsline {section}{\numberline {9}Re-test}{37}{section.9}%
+\contentsline {subsection}{\numberline {9.1}4.1 \& 4.2 --- Credential Stuffing și Stocare parolă}{37}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}4.3 --- Brute Force / Rate Limiting}{39}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}4.4 --- User Enumeration}{40}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}4.5 --- Invalidare token la logout}{41}{subsection.9.4}%
+\contentsline {subsection}{\numberline {9.5}4.6 --- Token de resetare parolă}{42}{subsection.9.5}%
+\contentsline {section}{\numberline {10}Audit \& Logging}{43}{section.10}%
+\contentsline {section}{\numberline {11}Concluzii}{44}{section.11}%
