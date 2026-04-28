@@ -7,6 +7,8 @@ import (
 	"github.com/alex6damian/CrackMe-AuthX/internal/models"
 	"github.com/alex6damian/CrackMe-AuthX/internal/utils"
 
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -98,9 +100,10 @@ func Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error parsing"})
 	}
 
-	// raw sql for injection
+	// raw sql - vulnerable to SQL injection via string concatenation
 	var user models.User
-	if err := db.DB.Raw("SELECT * FROM users WHERE email = ?", req.Email).Scan(&user).Error; err != nil {
+	query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", req.Email)
+	if err := db.DB.Raw(query).Scan(&user).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
 	}
 
