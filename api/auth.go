@@ -66,6 +66,8 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error creating user"})
 	}
 
+	logAction(c, user.ID, "REGISTER", "auth", "")
+
 	// Generate JWT token
 	token, err := utils.GenerateToken(user.ID, user.Email, user.Role)
 	if err != nil {
@@ -118,6 +120,7 @@ func Login(c *fiber.Ctx) error {
 
 	// Check password
 	if user.Password_hash != req.Password {
+		logAction(c, user.ID, "FAILED_LOGIN", "auth", "")
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Wrong password"})
 	}
 
@@ -142,6 +145,8 @@ func Login(c *fiber.Ctx) error {
 		// Secure: true,
 	})
 
+	logAction(c, user.ID, "LOGIN", "auth", "")
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"success": true,
 		"data":    response,
@@ -150,9 +155,8 @@ func Login(c *fiber.Ctx) error {
 
 // Lougout handler - POST /api/logout
 func Logout(c *fiber.Ctx) error {
-	/*
-		Pentru securizare, invalidare token instant
-	*/
+	userID, _ := c.Locals("userID").(uint)
+	logAction(c, userID, "LOGOUT", "auth", "")
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"success": true,
@@ -185,6 +189,8 @@ func ForgotPassword(c *fiber.Ctx) error {
 	if err := db.DB.Save(&user).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error saving token"})
 	}
+
+	logAction(c, user.ID, "FORGOT_PASSWORD", "auth", "")
 
 	response := ForgotPasswordResponse{
 		Token: *user.Reset_password,
@@ -219,6 +225,8 @@ func ResetPassword(c *fiber.Ctx) error {
 	if err := db.DB.Save(&user).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to reset password"})
 	}
+
+	logAction(c, user.ID, "RESET_PASSWORD", "auth", "")
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Password has been reset",
