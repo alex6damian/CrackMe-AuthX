@@ -114,6 +114,22 @@ INPUT /usr/share/texlive/texmf-dist/tex/latex/amsfonts/amssymb.sty
 INPUT /usr/share/texlive/texmf-dist/tex/latex/amsfonts/amssymb.sty
 INPUT /usr/share/texlive/texmf-dist/tex/latex/amsfonts/amsfonts.sty
 INPUT /usr/share/texlive/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+INPUT /usr/share/texlive/texmf-dist/tex/latex/listings/listings.sty
+INPUT /usr/share/texlive/texmf-dist/tex/latex/listings/listings.sty
+INPUT /usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
+INPUT /usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
+INPUT /usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
+INPUT /usr/share/texlive/texmf-dist/tex/latex/listings/listings.cfg
+INPUT /usr/share/texlive/texmf-dist/tex/latex/listings/listings.cfg
+INPUT /usr/share/texlive/texmf-dist/tex/latex/listings/listings.cfg
+INPUT /usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
+INPUT /usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
+INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
+INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
+INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
+INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics/mathcolor.ltx
+INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics/mathcolor.ltx
+INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics/mathcolor.ltx
 INPUT /usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty
 INPUT /usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty
 INPUT /usr/share/texlive/texmf-dist/tex/generic/iftex/ifvtex.sty
@@ -133,13 +149,6 @@ INPUT /usr/share/texlive/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/share/texlive/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/share/texlive/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics/color.sty
-INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics/color.sty
-INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
-INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
-INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
-INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics/mathcolor.ltx
-INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics/mathcolor.ltx
-INPUT /usr/share/texlive/texmf-dist/tex/latex/graphics/mathcolor.ltx
 INPUT ./main.out
 INPUT ./main.out
 INPUT main.out
@@ -200,9 +209,9 @@ INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm7.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecrm0600.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx0600.tfm
-OUTPUT main.toc
 INPUT /var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map
 INPUT /usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc
+OUTPUT main.toc
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx1440.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx0700.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/tcrm1200.tfm
@@ -219,6 +228,43 @@ INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmex10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx1000.tfm
+INPUT ./dovezi atacuri/register_bf.png
+INPUT ./dovezi atacuri/register_bf.png
+INPUT ./dovezi atacuri/register_bf.png
+INPUT ./dovezi atacuri/register_bf.png
+INPUT ./dovezi atacuri/register_bf.png
+INPUT ./dovezi atacuri/acces_bd.png
+INPUT ./dovezi atacuri/acces_bd.png
+INPUT ./dovezi atacuri/acces_bd.png
+INPUT ./dovezi atacuri/acces_bd.png
+INPUT ./dovezi atacuri/acces_bd.png
+INPUT ./dovezi atacuri/login_force.png
+INPUT ./dovezi atacuri/login_force.png
+INPUT ./dovezi atacuri/login_force.png
+INPUT ./dovezi atacuri/login_force.png
+INPUT ./dovezi atacuri/login_force.png
+INPUT ./dovezi atacuri/userenum.png
+INPUT ./dovezi atacuri/userenum.png
+INPUT ./dovezi atacuri/userenum.png
+INPUT ./dovezi atacuri/userenum.png
+INPUT ./dovezi atacuri/userenum.png
+INPUT ./dovezi atacuri/login_messages.png
+INPUT ./dovezi atacuri/login_messages.png
+INPUT ./dovezi atacuri/login_messages.png
+INPUT ./dovezi atacuri/login_messages.png
+INPUT ./dovezi atacuri/login_messages.png
+INPUT ./dovezi atacuri/session_reuse.png
+INPUT ./dovezi atacuri/session_reuse.png
+INPUT ./dovezi atacuri/session_reuse.png
+INPUT ./dovezi atacuri/session_reuse.png
+INPUT ./dovezi atacuri/session_reuse.png
+INPUT ./dovezi atacuri/pwd_reset_token.png
+INPUT ./dovezi atacuri/pwd_reset_token.png
+INPUT ./dovezi atacuri/pwd_reset_token.png
+INPUT ./dovezi atacuri/pwd_reset_token.png
+INPUT ./dovezi atacuri/pwd_reset_token.png
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ectt1095.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecrm1095.tfm
 INPUT main.aux
 INPUT ./main.out
 INPUT ./main.out
@@ -236,4 +282,5 @@ INPUT /usr/share/texmf/fonts/type1/public/cm-super/sfrm1200.pfb
 INPUT /usr/share/texmf/fonts/type1/public/cm-super/sfrm1440.pfb
 INPUT /usr/share/texmf/fonts/type1/public/cm-super/sfrm2074.pfb
 INPUT /usr/share/texmf/fonts/type1/public/cm-super/sfti1200.pfb
+INPUT /usr/share/texmf/fonts/type1/public/cm-super/sftt1095.pfb
 INPUT /usr/share/texmf/fonts/type1/public/cm-super/sftt1200.pfb

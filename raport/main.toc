@@ -1,24 +1,37 @@
 \babel@toc {romanian}{}\relax 
-\contentsline {section}{\numberline {1}Introducere}{2}{section.1}%
-\contentsline {subsection}{\numberline {1.1}Descrierea aplicației}{2}{subsection.1.1}%
-\contentsline {subsection}{\numberline {1.2}Arhitectura sistemului}{3}{subsection.1.2}%
-\contentsline {subsubsection}{\numberline {1.2.1}Tech Stack}{3}{subsubsection.1.2.1}%
-\contentsline {subsubsection}{\numberline {1.2.2}Structura proiectului}{3}{subsubsection.1.2.2}%
-\contentsline {subsubsection}{\numberline {1.2.3}Layerele arhitecturale}{4}{subsubsection.1.2.3}%
-\contentsline {subsection}{\numberline {1.3}Motivația și obiectivele proiectului}{5}{subsection.1.3}%
-\contentsline {section}{\numberline {2}Setup mediu}{6}{section.2}%
-\contentsline {subsection}{\numberline {2.1}Mașina virtuală}{6}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}Framework și limbaj de programare}{6}{subsection.2.2}%
-\contentsline {subsection}{\numberline {2.3}Baza de date}{6}{subsection.2.3}%
-\contentsline {subsection}{\numberline {2.4}Instrumente de testare}{7}{subsection.2.4}%
-\contentsline {section}{\numberline {3}Implementare MVP}{8}{section.3}%
-\contentsline {subsection}{\numberline {3.1}Autentificare}{8}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}CRUD Tickete}{9}{subsection.3.2}%
-\contentsline {subsection}{\numberline {3.3}Search și Filtrare}{10}{subsection.3.3}%
-\contentsline {section}{\numberline {4}Prezentare vulnerabilități}{12}{section.4}%
-\contentsline {subsection}{\numberline {4.1}V1 --- Parolă stocată în plaintext}{12}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}V2 --- SQL Injection în Login}{12}{subsection.4.2}%
-\contentsline {subsection}{\numberline {4.3}V3 --- Token de resetare parolă predictibil}{13}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}V4 --- Cookie fără flag HttpOnly}{13}{subsection.4.4}%
-\contentsline {subsection}{\numberline {4.5}V5 --- Token de resetare neinvalidat după utilizare}{14}{subsection.4.5}%
-\contentsline {subsection}{\numberline {4.6}V6 --- User Enumeration}{14}{subsection.4.6}%
+\contentsline {section}{\numberline {1}Introducere}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Descrierea aplicației}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Arhitectura sistemului}{4}{subsection.1.2}%
+\contentsline {subsubsection}{\numberline {1.2.1}Tech Stack}{4}{subsubsection.1.2.1}%
+\contentsline {subsubsection}{\numberline {1.2.2}Structura proiectului}{4}{subsubsection.1.2.2}%
+\contentsline {subsubsection}{\numberline {1.2.3}Layerele arhitecturale}{5}{subsubsection.1.2.3}%
+\contentsline {subsection}{\numberline {1.3}Motivația și obiectivele proiectului}{6}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Setup mediu}{7}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Mașina virtuală}{7}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Framework și limbaj de programare}{7}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Baza de date}{7}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Instrumente de testare}{8}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Implementare MVP}{9}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Autentificare}{9}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}CRUD Tickete}{10}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Search și Filtrare}{11}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Prezentare vulnerabilități}{13}{section.4}%
+\contentsline {subsection}{\numberline {4.1}V1 --- Parolă stocată în plaintext}{13}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}V2 --- SQL Injection în Login}{13}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}V3 --- Token de resetare parolă predictibil}{14}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}V4 --- Cookie fără flag HttpOnly}{14}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}V5 --- Token de resetare neinvalidat după utilizare}{15}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}V6 --- User Enumeration}{15}{subsection.4.6}%
+\contentsline {section}{\numberline {5}Demonstrare atacuri (PoC) și Analiză impact}{17}{section.5}%
+\contentsline {subsection}{\numberline {5.1}4.1 --- Password Policy slab: Credential Stuffing la Register}{17}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}4.2 --- Stocare nesigură: Acces la baza de date}{18}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}4.3 --- Brute Force: Lipsa Rate Limiting la Login}{19}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}4.4 --- User Enumeration}{20}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}4.5 --- Gestionare nesigură a sesiunilor}{22}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}4.6 --- Resetare parolă nesigură: Token predictibil}{23}{subsection.5.6}%
+\contentsline {section}{\numberline {6}Implementare fix}{24}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Fix 4.1 \& 4.2 --- Password Policy + Stocare parolă}{24}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Fix 4.3 --- Brute Force / Rate Limiting}{24}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Fix 4.4 --- User Enumeration}{25}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Fix 4.5 --- Gestionare nesigură a sesiunilor}{25}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Fix 4.6 --- Resetare parolă nesigură}{26}{subsection.6.5}%

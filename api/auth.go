@@ -208,11 +208,8 @@ func ForgotPassword(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "DB error"})
 	}
 
-	var token string
-	if user.Reset_password == nil {
-		token = utils.GeneratePredictableResetToken(req.Email)
-		user.Reset_password = &token
-	}
+	token := utils.GenerateSecureResetToken()
+	user.Reset_password = &token
 
 	if err := db.DB.Save(&user).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error saving token"})
@@ -251,8 +248,7 @@ func ResetPassword(c *fiber.Ctx) error {
 	}
 
 	user.Password_hash = req.Password
-
-	// De invalidat pe viitor
+	user.Reset_password = nil
 
 	if err := db.DB.Save(&user).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to reset password"})
