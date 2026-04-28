@@ -32,6 +32,13 @@ func AuthMiddleware(c *fiber.Ctx) error {
 		})
 	}
 
+	if utils.IsTokenBlacklisted(token) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Token has been invalidated",
+		})
+	}
+
 	claims, err := utils.ValidateToken(token)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{

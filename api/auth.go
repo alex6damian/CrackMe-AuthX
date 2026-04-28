@@ -182,9 +182,27 @@ func Login(c *fiber.Ctx) error {
 
 // Lougout handler - POST /api/logout
 func Logout(c *fiber.Ctx) error {
-	/*
-		Pentru securizare, invalidare token instant
-	*/
+	token := ""
+	if auth := c.Get("Authorization"); len(auth) > 7 && auth[:7] == "Bearer " {
+		token = auth[7:]
+	}
+	if token == "" {
+		token = c.Cookies("token")
+	}
+	if token != "" {
+		utils.BlacklistToken(token)
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "token",
+		Value:    "",
+		MaxAge:   -1,
+		Path:     "/",
+		HTTPOnly: true,
+	})
+
+	userID, _ := c.Locals("userID").(uint)
+	logAction(c, userID, "LOGOUT", "auth", "")
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"success": true,
